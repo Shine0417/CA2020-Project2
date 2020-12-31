@@ -47,6 +47,15 @@ wire                Stall;
 wire                NoOp;
 wire                Flush;
 
+// project2 - data cache
+wire                MemStall;
+wire    [255:0]     cache_to_mem_data;
+wire    [255:0]     mem_to_cache_data;        
+wire                mem_ack;         
+wire    [31:0]      mem_addr;           
+wire                mem_enable;     
+wire                mem_write;
+
 //=====================================================================//
 //============================== Modules ==============================//
 //=====================================================================//
@@ -59,7 +68,8 @@ Pipeline_Register #(.n(32)) IF_ID (
     .pc_i       (address),
     .data_i     (ins),
     .pc_o       (address_ID),
-    .data_o     (ins_ID)
+    .data_o     (ins_ID),
+    .MemStall_i     (MemStall)
 );
 
 
@@ -71,7 +81,8 @@ Pipeline_Register #(.n(135)) ID_EX (
     .pc_i       (32'bx),
     .data_i     ({RegWrite, MemtoReg, MemRead, MemWrite, ALUOp, ALUSrc, read_data1, read_data2, imm_gen_wire, ins_ID}),
     .pc_o       (),
-    .data_o     ({RegWrite_EX, MemtoReg_EX, MemRead_EX, MemWrite_EX, ALUOp_EX, ALUSrc_EX, read_data1_EX, read_data2_EX, imm_gen_wire_EX, ins_EX})
+    .data_o     ({RegWrite_EX, MemtoReg_EX, MemRead_EX, MemWrite_EX, ALUOp_EX, ALUSrc_EX, read_data1_EX, read_data2_EX, imm_gen_wire_EX, ins_EX}),
+    .MemStall_i     (MemStall)
 );
 
 
@@ -83,7 +94,8 @@ Pipeline_Register #(.n(100)) EX_MEM (
     .pc_i           (32'bx),
     .data_i         ({RegWrite_EX, MemtoReg_EX, MemRead_EX, MemWrite_EX, ALU_result, MUX_ForwardB_out, ins_EX}),
     .pc_o           (),
-    .data_o         ({RegWrite_MEM, MemtoReg_MEM, MemRead_MEM, MemWrite_MEM, ALU_result_MEM, read_data2_MEM, ins_MEM})
+    .data_o         ({RegWrite_MEM, MemtoReg_MEM, MemRead_MEM, MemWrite_MEM, ALU_result_MEM, read_data2_MEM, ins_MEM}),
+    .MemStall_i     (MemStall)
 );
 
 
@@ -95,7 +107,8 @@ Pipeline_Register #(.n(98)) MEM_WB (
     .pc_i           (32'bx),
     .data_i         ({RegWrite_MEM, MemtoReg_MEM, ALU_result_MEM, data_memory_output, ins_MEM}),
     .pc_o           (),
-    .data_o         ({RegWrite_WB, MemtoReg_WB, ALU_result_WB, data_memory_output_WB, ins_WB})
+    .data_o         ({RegWrite_WB, MemtoReg_WB, ALU_result_WB, data_memory_output_WB, ins_WB}),
+    .MemStall_i     (MemStall)
 );
 
 
@@ -125,7 +138,8 @@ PC PC(
     .start_i        (start_i),
     .PCWrite_i      (PCWrite),
     .pc_i           (PCSrc_address),
-    .pc_o           (address)
+    .pc_o           (address),
+    .MemStall_i     (MemStall)
 );
 
 
@@ -143,7 +157,7 @@ Registers Registers(
     .RDdata_i       (write_register),
     .RegWrite_i     (RegWrite_WB), 
     .RS1data_o      (read_data1), 
-    .RS2data_o      (read_data2) 
+    .RS2data_o      (read_data2)
 );
 
 
@@ -216,15 +230,37 @@ ALU_Control ALU_Control(
 );
 
 
-Data_Memory Data_Memory(
+dcache_controller dcache_controller(
     .clk_i          (clk_i), 
-    .addr_i         (ALU_result_MEM), 
-    .MemRead_i      (MemRead_MEM),
-    .MemWrite_i     (MemWrite_MEM),
-    .data_i         (read_data2_MEM),
-    .data_o         (data_memory_output)
+    .rst_i          (rst_i),
+
+    // to CPU interface
+    .cpu_data_i     (read_data2_MEM), 
+    .cpu_addr_i     (ALU_result_MEM),     
+    cpu_MemRead_i   (MemRead_MEM), 
+    cpu_MemWrite_i  (MemWrite_MEM), 
+    cpu_data_o      (data_memory_output), 
+    cpu_stall_o     (MemStall),
+    
+    // to Data Memory interface        
+    mem_data_i      (mem_to_cache_data), 
+    mem_ack_i       (mem_ack),     
+    mem_data_o      (cache_to_mem_data), 
+    mem_addr_o      (mem_addr),     
+    mem_enable_o    (mem_enable), 
+    mem_write_o     (mem_write)
 );
 
+Data_Memory Data_Memory(
+    clk_i           (clk_i),
+    rst_i           (rst_i),
+    addr_i          (mem_addr),
+    data_i          (cache_to_mem_data),
+    enable_i        (mem_enable),
+    write_i         (mem_write),
+    ack_o           (mem_ack),
+    data_o          (mem_to_cache_data)
+);
 
 Hazard_Detection Hazard_Detection(
     .RDaddr_EX_i    (ins_EX[11:7]),
