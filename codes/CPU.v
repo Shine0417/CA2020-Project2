@@ -1,14 +1,27 @@
 module CPU
 (
-    clk_i, 
+    clk_i,
     rst_i,
-    start_i
+    start_i,
+
+    mem_data_i,
+    mem_ack_i,
+    mem_data_o,
+    mem_addr_o,
+    mem_enable_o,
+    mem_write_o,
 );
 
 // Ports
 input               clk_i;
 input               rst_i;
 input               start_i;
+input   [255:0]     mem_data_i;
+input               mem_ack_i;
+output  [255:0]     mem_data_o;
+output  [31:0]      mem_addr_o;
+output              mem_enable_o;
+output              mem_write_o;      
 
 wire    [31:0]      address;
 wire    [31:0]      new_address;
@@ -35,7 +48,7 @@ wire                MemWrite, MemWrite_EX, MemWrite_MEM;
 wire    [31:0]      data_memory_output, data_memory_output_WB;
 wire    [31:0]      write_register;
 
-//Forwarding
+// Forwarding
 wire    [ 1:0]      Forward_A , Forward_B;
 wire    [31:0]      MUX_ForwardA_out , MUX_ForwardB_out;
 
@@ -61,27 +74,27 @@ wire                mem_write;
 //=====================================================================//
 
 Pipeline_Register #(.n(32)) IF_ID (
-    .clk_i      (clk_i),
-    .start_i    (start_i),
-    .stall_i    (Stall),
-    .flush_i    (Flush),
-    .pc_i       (address),
-    .data_i     (ins),
-    .pc_o       (address_ID),
-    .data_o     (ins_ID),
+    .clk_i          (clk_i),
+    .start_i        (start_i),
+    .stall_i        (Stall),
+    .flush_i        (Flush),
+    .pc_i           (address),
+    .data_i         (ins),
+    .pc_o           (address_ID),
+    .data_o         (ins_ID),
     .MemStall_i     (MemStall)
 );
 
 
 Pipeline_Register #(.n(135)) ID_EX (
-    .clk_i      (clk_i),
-    .start_i    (start_i),
-    .stall_i    (1'bx),
-    .flush_i    (1'bx),
-    .pc_i       (32'bx),
-    .data_i     ({RegWrite, MemtoReg, MemRead, MemWrite, ALUOp, ALUSrc, read_data1, read_data2, imm_gen_wire, ins_ID}),
-    .pc_o       (),
-    .data_o     ({RegWrite_EX, MemtoReg_EX, MemRead_EX, MemWrite_EX, ALUOp_EX, ALUSrc_EX, read_data1_EX, read_data2_EX, imm_gen_wire_EX, ins_EX}),
+    .clk_i          (clk_i),
+    .start_i        (start_i),
+    .stall_i        (1'bx),
+    .flush_i        (1'bx),
+    .pc_i           (32'bx),
+    .data_i         ({RegWrite, MemtoReg, MemRead, MemWrite, ALUOp, ALUSrc, read_data1, read_data2, imm_gen_wire, ins_ID}),
+    .pc_o           (),
+    .data_o         ({RegWrite_EX, MemtoReg_EX, MemRead_EX, MemWrite_EX, ALUOp_EX, ALUSrc_EX, read_data1_EX, read_data2_EX, imm_gen_wire_EX, ins_EX}),
     .MemStall_i     (MemStall)
 );
 
@@ -230,36 +243,36 @@ ALU_Control ALU_Control(
 );
 
 
-dcache_controller dcache_controller(
+dcache_controller dcache(
     .clk_i          (clk_i), 
     .rst_i          (rst_i),
 
     // to CPU interface
     .cpu_data_i     (read_data2_MEM), 
     .cpu_addr_i     (ALU_result_MEM),     
-    cpu_MemRead_i   (MemRead_MEM), 
-    cpu_MemWrite_i  (MemWrite_MEM), 
-    cpu_data_o      (data_memory_output), 
-    cpu_stall_o     (MemStall),
+    .cpu_MemRead_i  (MemRead_MEM), 
+    .cpu_MemWrite_i (MemWrite_MEM), 
+    .cpu_data_o     (data_memory_output), 
+    .cpu_stall_o    (MemStall),
     
     // to Data Memory interface        
-    mem_data_i      (mem_to_cache_data), 
-    mem_ack_i       (mem_ack),     
-    mem_data_o      (cache_to_mem_data), 
-    mem_addr_o      (mem_addr),     
-    mem_enable_o    (mem_enable), 
-    mem_write_o     (mem_write)
+    .mem_data_i     (mem_to_cache_data), 
+    .mem_ack_i      (mem_ack),     
+    .mem_data_o     (cache_to_mem_data), 
+    .mem_addr_o     (mem_addr),     
+    .mem_enable_o   (mem_enable), 
+    .mem_write_o    (mem_write)
 );
 
 Data_Memory Data_Memory(
-    clk_i           (clk_i),
-    rst_i           (rst_i),
-    addr_i          (mem_addr),
-    data_i          (cache_to_mem_data),
-    enable_i        (mem_enable),
-    write_i         (mem_write),
-    ack_o           (mem_ack),
-    data_o          (mem_to_cache_data)
+    .clk_i          (clk_i),
+    .rst_i          (rst_i),
+    .addr_i         (mem_addr),
+    .data_i         (cache_to_mem_data),
+    .enable_i       (mem_enable),
+    .write_i        (mem_write),
+    .ack_o          (mem_ack),
+    .data_o         (mem_to_cache_data)
 );
 
 Hazard_Detection Hazard_Detection(

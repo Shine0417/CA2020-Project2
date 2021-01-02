@@ -21,29 +21,30 @@ parameter          num_cycles = 200;
 
 always #(`CYCLE_TIME/2) Clk = ~Clk;    
 
-CPU CPU(
-    .clk_i  (Clk),
-    .rst_i  (Reset),
-    .start_i(Start),
+CPU CPU
+(
+    .clk_i          (Clk),
+    .rst_i          (Reset),
+    .start_i        (Start),
     
-    .mem_data_i(mem_cpu_data), 
-    .mem_ack_i(mem_cpu_ack),     
-    .mem_data_o(cpu_mem_data), 
-    .mem_addr_o(cpu_mem_addr),     
-    .mem_enable_o(cpu_mem_enable), 
-    .mem_write_o(cpu_mem_write)
+    .mem_data_i     (mem_cpu_data), 
+    .mem_ack_i      (mem_cpu_ack),     
+    .mem_data_o     (cpu_mem_data), 
+    .mem_addr_o     (cpu_mem_addr),     
+    .mem_enable_o   (cpu_mem_enable), 
+    .mem_write_o    (cpu_mem_write)
 );
 
 Data_Memory Data_Memory
 (
-    .clk_i    (Clk),
-    .rst_i    (Reset),
-    .addr_i   (cpu_mem_addr),
-    .data_i   (cpu_mem_data),
-    .enable_i (cpu_mem_enable),
-    .write_i  (cpu_mem_write),
-    .ack_o    (mem_cpu_ack),
-    .data_o   (mem_cpu_data)
+    .clk_i          (Clk),
+    .rst_i          (Reset),
+    .addr_i         (cpu_mem_addr),
+    .data_i         (cpu_mem_data),
+    .enable_i       (cpu_mem_enable),
+    .write_i        (cpu_mem_write),
+    .ack_o          (mem_cpu_ack),
+    .data_o         (mem_cpu_data)
 );
   
 initial begin

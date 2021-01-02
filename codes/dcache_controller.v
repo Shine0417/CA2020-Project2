@@ -129,8 +129,8 @@ end
 // write data :  32-bit to 256-bit
 always@(cpu_offset or r_hit_data or cpu_data_i) begin
     // TODO: add your code here! (w_hit_data=...?)
-    w_hit_data <= {r_hit_data[255:cpu_offset * 8 + 32] , cpu_data_i , r_hit_data[cpu_offset * 8 - 1:0];
-
+    w_hit_data <= {r_hit_data[255:(cpu_offset * 8 + 32)] , cpu_data_i , r_hit_data[(cpu_offset * 8 - 1):0]};
+end
 
 // controller 
 always@(posedge clk_i or posedge rst_i) begin
