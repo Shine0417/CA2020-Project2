@@ -39,15 +39,16 @@ reg                hit_id;
 // 1. Write hit
 // 2. Read miss: Read from memory
 always@(posedge clk_i or posedge rst_i) begin
-    hit_id = (tag[addr_i][0][24] && (tag[addr_i][0][22:0] == tag_i[22:0]))? 0 : 1;
     if (rst_i) begin
         for (i=0;i<16;i=i+1) begin
             for (j=0;j<2;j=j+1) begin
                 tag[i][j] <= 25'b0;
                 data[i][j] <= 256'b0;
             end
+            LRU[i] <= 0;
         end
     end
+    hit_id = (tag[addr_i][0][24] && (tag[addr_i][0][22:0] == tag_i[22:0]))? 0 : 1;
     if (enable_i && write_i) begin
         // TODO: Handle your write of 2-way associative cache + LRU here
         if (tag_i[23] == 1) begin // Write hit -> dirty bit = 1

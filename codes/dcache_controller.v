@@ -120,16 +120,19 @@ assign    cache_dirty  = write_hit;
 // TODO: add your code here!  (r_hit_data=...?)
 assign r_hit_data = sram_cache_data;
 // read data :  256-bit to 32-bit
+reg         [255:0] tmp;
 always@(cpu_offset or r_hit_data) begin
-    // TODO: add your code here! (cpu_data=...?)
-    cpu_data <= r_hit_data[cpu_offset * 8 + 31:cpu_offset * 8];
+    // TODO: add your code here! (cpu_data=...?)    
+    cpu_data <= r_hit_data[cpu_offset * 8 +: 32];
 end
 
 
 // write data :  32-bit to 256-bit
 always@(cpu_offset or r_hit_data or cpu_data_i) begin
     // TODO: add your code here! (w_hit_data=...?)
-    w_hit_data <= {r_hit_data[255:(cpu_offset * 8 + 32)] , cpu_data_i , r_hit_data[(cpu_offset * 8 - 1):0]};
+    tmp = r_hit_data;
+    tmp[cpu_offset * 8 +: 32] = cpu_data_i;
+    w_hit_data <= tmp;
 end
 
 // controller 
@@ -139,7 +142,7 @@ always@(posedge clk_i or posedge rst_i) begin
         mem_enable  <= 1'b0;
         mem_write   <= 1'b0;
         cache_write <= 1'b0; 
-        write_back  <= 1'b1;
+        write_back  <= 1'b0;
     end
     else begin
         case(state)        
@@ -154,6 +157,7 @@ always@(posedge clk_i or posedge rst_i) begin
             STATE_MISS: begin
                 if(sram_dirty) begin          // write back if dirty
                     // TODO: add your code here!
+                    write_back <= 1;
                     mem_enable <= 1;
                     mem_write <= 1;
                     state <= STATE_WRITEBACK;
