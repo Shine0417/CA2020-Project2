@@ -62,12 +62,6 @@ wire                Flush;
 
 // project2 - data cache
 wire                MemStall;
-wire    [255:0]     cache_to_mem_data;
-wire    [255:0]     mem_to_cache_data;        
-wire                mem_ack;         
-wire    [31:0]      mem_addr;           
-wire                mem_enable;     
-wire                mem_write;
 
 //=====================================================================//
 //============================== Modules ==============================//
@@ -256,24 +250,14 @@ dcache_controller dcache(
     .cpu_stall_o    (MemStall),
     
     // to Data Memory interface        
-    .mem_data_i     (mem_to_cache_data), 
-    .mem_ack_i      (mem_ack),     
-    .mem_data_o     (cache_to_mem_data), 
-    .mem_addr_o     (mem_addr),     
-    .mem_enable_o   (mem_enable), 
-    .mem_write_o    (mem_write)
+    .mem_data_i     (mem_data_i), 
+    .mem_ack_i      (mem_ack_i),     
+    .mem_data_o     (mem_data_o), 
+    .mem_addr_o     (mem_addr_o),     
+    .mem_enable_o   (mem_enable_o), 
+    .mem_write_o    (mem_write_o)
 );
 
-Data_Memory Data_Memory(
-    .clk_i          (clk_i),
-    .rst_i          (rst_i),
-    .addr_i         (mem_addr),
-    .data_i         (cache_to_mem_data),
-    .enable_i       (mem_enable),
-    .write_i        (mem_write),
-    .ack_o          (mem_ack),
-    .data_o         (mem_to_cache_data)
-);
 
 Hazard_Detection Hazard_Detection(
     .RDaddr_EX_i    (ins_EX[11:7]),
