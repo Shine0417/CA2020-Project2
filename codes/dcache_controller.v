@@ -123,16 +123,15 @@ assign r_hit_data = sram_cache_data;
 reg         [255:0] tmp;
 always@(cpu_offset or r_hit_data) begin
     // TODO: add your code here! (cpu_data=...?)    
-    cpu_data <= r_hit_data[cpu_offset * 8 +: 31];
+    cpu_data = r_hit_data[cpu_offset * 8 +: 31];
 end
 
 
 // write data :  32-bit to 256-bit
 always@(cpu_offset or r_hit_data or cpu_data_i) begin
     // TODO: add your code here! (w_hit_data=...?)
-    tmp = r_hit_data;
-    tmp[cpu_offset * 8 +: 31] = cpu_data_i;
-    w_hit_data <= tmp;
+    w_hit_data = r_hit_data
+    w_hit_data[cpu_offset * 8 +: 31] = cpu_data_i;
 end
 
 // controller 
