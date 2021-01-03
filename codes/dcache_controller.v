@@ -123,7 +123,7 @@ assign r_hit_data = sram_cache_data;
 reg         [255:0] tmp;
 always@(cpu_offset or r_hit_data) begin
     // TODO: add your code here! (cpu_data=...?)    
-    cpu_data <= r_hit_data[cpu_offset * 8 +: 32];
+    cpu_data <= r_hit_data[cpu_offset * 8 +: 31];
 end
 
 
@@ -131,7 +131,7 @@ end
 always@(cpu_offset or r_hit_data or cpu_data_i) begin
     // TODO: add your code here! (w_hit_data=...?)
     tmp = r_hit_data;
-    tmp[cpu_offset * 8 +: 32] = cpu_data_i;
+    tmp[cpu_offset * 8 +: 31] = cpu_data_i;
     w_hit_data <= tmp;
 end
 
@@ -180,6 +180,10 @@ always@(posedge clk_i or posedge rst_i) begin
             end
             STATE_READMISSOK: begin            // wait for data memory acknowledge
                 // TODO: add your code here! 
+                mem_enable  <= 1'b0;
+                mem_write   <= 1'b0;
+                cache_write <= 1'b0; 
+                write_back  <= 1'b0;
                 state <= STATE_IDLE;
             end
             STATE_WRITEBACK: begin

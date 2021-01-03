@@ -152,7 +152,7 @@ PC PC(
     .PCWrite_i      (PCWrite),
     .pc_i           (PCSrc_address),
     .pc_o           (address),
-    .MemStall_i     (MemStall)
+    .stall_i        (MemStall)
 );
 
 
