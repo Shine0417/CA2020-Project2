@@ -120,10 +120,9 @@ assign    cache_dirty  = write_hit;
 // TODO: add your code here!  (r_hit_data=...?)
 assign r_hit_data = sram_cache_data;
 // read data :  256-bit to 32-bit
-reg         [255:0] tmp;
 always@(cpu_offset or r_hit_data) begin
     // TODO: add your code here! (cpu_data=...?)    
-    cpu_data = r_hit_data[cpu_offset * 8 +: 32];
+    cpu_data <= r_hit_data[cpu_offset * 8 +: 32];
 end
 
 
