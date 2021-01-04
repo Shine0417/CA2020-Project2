@@ -51,14 +51,16 @@ always@(posedge clk_i or posedge rst_i) begin
     hit_id = (tag[addr_i][0][24] && (tag[addr_i][0][22:0] == tag_i[22:0]))? 0 : (tag[addr_i][1][24] && (tag[addr_i][1][22:0] == tag_i[22:0]))? 1 : 2;
     if (enable_i && write_i) begin
         // TODO: Handle your write of 2-way associative cache + LRU here
-        if (hit_id != 2) begin // Write hit
+        if (hit_id != 2 && tag_i[23] == 1) begin // Write hit
             tag [addr_i][hit_id] <= tag_i;
             data[addr_i][hit_id] <= data_i;
-            LRU [addr_i] <= hit_id;
+            tag [addr_i][hit_id][23] <= 1'b1;
+            LRU [addr_i] <= ~hit_id;
         end 
         else begin // Read miss
             tag [addr_i][LRU[addr_i]] <= tag_i;
             data[addr_i][LRU[addr_i]] <= data_i;
+            tag [addr_i][LRU[addr_i]][23] <= 1'b0;
             LRU [addr_i] <= ~LRU[addr_i];
         end
     end
